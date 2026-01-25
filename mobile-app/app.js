@@ -53,7 +53,7 @@ export default function App() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Corn Doctor 🌽</Text>
+      <Text style={styles.title}>AI Corn Care</Text>
       <Text style={styles.subtitle}>බඩඉරිඟු රෝග හඳුනාගැනීමේ පද්ධතිය</Text>
 
       <TouchableOpacity style={styles.button} onPress={pickImage}>

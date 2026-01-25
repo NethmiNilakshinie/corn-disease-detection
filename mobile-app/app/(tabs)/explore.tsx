@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager, Image, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,27 +13,34 @@ export default function ExploreScreen() {
   const [activeTab, setActiveTab] = useState('Guide');
   const [lang, setLang] = useState<'en' | 'si' | 'ta'>('en');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [history, setHistory] = useState<any[]>([]); // History state
+  const [history, setHistory] = useState<any[]>([]);
   const isFocused = useIsFocused();
+
+  const openVideo = (url: string) => {
+    Linking.openURL(url).catch((err) => console.error("Error loading video", err));
+  };
+
+  const itemImages: Record<string, any> = {
+    d1: require('../../assets/Corn-Anthracnose.jpg'),
+    d2: require('../../assets/diplodi_aer_rot.jpg'),
+    d3: require('../../assets/fusarium_ear_rot.jpg'),
+    d4: require('../../assets/gibberella_ear_rot.jpeg'),
+    d6: require('../../assets/tar_spot.webp'),
+    p1: require('../../assets/fall_armyworm.webp'),
+    p2: require('../../assets/european_corn_borer.jpg'),
+    p3: require('../../assets/corn_leafhopper.jpg'),
+    p4: require('../../assets/corn_leaf_miner.webp'),
+    p5: require('../../assets/cucumber_beetles.jpg'),
+  };
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const savedLang = await AsyncStorage.getItem('userLanguage');
         if (savedLang) setLang(savedLang as 'en' | 'si' | 'ta');
-        
-        // Load history from AsyncStorage
         const savedHistory = await AsyncStorage.getItem('scanHistory');
-        if (savedHistory) {
-          setHistory(JSON.parse(savedHistory));
-        } else {
-          // Default data if empty
-          setHistory([
-            { id: '1', disease: 'Common Rust', date: '2026/01/21', accuracy: '71.5%' },
-            { id: '2', disease: 'Healthy', date: '2026/01/21', accuracy: '97.8%' },
-          ]);
-        }
-      } catch (e) { console.error("Failed to load data", e); }
+        if (savedHistory) setHistory(JSON.parse(savedHistory));
+      } catch (e) { console.error("Load error", e); }
     };
     if (isFocused) loadData();
   }, [isFocused]);
@@ -57,200 +64,176 @@ export default function ExploreScreen() {
 
   const t: Record<string, any> = {
     en: {
-      title: "Explore 🌽",
-      tabs: ["Guide", "Tips", "History"],
-      guideTitle: "Agri Handbook 📖",
-      tipsTitle: "Care Tips 💡",
-      historyTitle: "Scan History 📜",
-      noHistory: "No scan history found.",
-      blightName: "Leaf Blight",
-      blightDesc: "Development worsened by over 6 hours of leaf wetness and moderate temperatures (65-82°F). Lesions develop 7-12 days after infection.",
-      rustName: "Common Rust",
-      rustDesc: "Caused by Puccinia sorghi. Appears as small, oval dark-reddish-brown pustules on both leaf surfaces.",
-      anthracnoseName: "Anthracnose",
-      anthracnoseDesc: "Attacks at various stages. Early as leaf blight, later causing 'top dieback' or stalk rot.",
-      eyespotName: "Eyespot",
-      eyespotDesc: "Small, light green circular lesions with yellow halos. Develops brown/purple rings as they age.",
-      tarspotName: "Tar Spot",
-      tarspotDesc: "Raised, circular black spots that cannot be rubbed or scraped off. Thrives in cool, wet conditions.",
-      rootwormName: "Corn Rootworm (CRW)",
-      rootwormDesc: "• Identification: Larvae feed on roots in June/July. Causes scars, tunneling, or roots chewed to the base.\n• Impact: Lodging, reduced water/nutrient uptake.\n• Action: Perform root digs and use yellow sticky traps.",
-      cutwormName: "Black Cutworm",
-      cutwormDesc: "• Identification: Causes 'dead heart'. Cuts young plants at soil surface.\n• Larvae: Black/pale-gray, grainy skin.\n• Action: Timely scouting early in the season is key.",
-      armywormName: "Fall Armyworm (FAW)",
-      armywormDesc: "• Identification: Damages leaf or ear tissues. Ragged edges in leaves.\n• Larvae: Inverted 'Y' on head.\n• Action: Pull and unroll whorls to make larval counts.",
-      earwormName: "Corn Earworm (CEW)",
-      earwormDesc: "• Identification: Favors ear feeding. Extensive excrement at the ear tip.\n• Impact: Entry point for fungal pathogens.\n• Action: Use pheromone traps.",
-      beanCutwormName: "Western Bean Cutworm",
-      beanCutwormDesc: "• Identification: Feeds on tassels, silks, and kernels.\n• Larvae: Two black squares above the head.\n• Action: Scout for egg masses on upper leaf surfaces.",
-      earlyTitle: "1. Planting & Early Stage (0-4 Weeks)",
-      early1: "Seed Depth: Plant 1-2 inches deep in moist soil.",
-      early2: "Gap Filling: Replace missing plants within 7-10 days.",
-      growthTitle: "2. Growth & Flowering (5-10 Weeks)",
-      growth1: "Fertilizer: Apply Urea at 4th and 8th weeks.",
-      growth2: "Watering: Critical during tasseling and silking stages.",
-      harvestTitle: "3. Maturation & Harvesting (12+ Weeks)",
-      harvest1: "Indicator: Harvest when kernels are hard and moisture is low.",
-      harvest2: "Storage: Dry grains properly to avoid weevil attacks.",
-      deleteTitle: "Delete Record", deleteMsg: "Are you sure?", cancel: "Cancel", delete: "Delete"
+      title: "Explore", tabs: ["Guide", "Tips", "History"], guideTitle: "Agri Handbook", tipsTitle: "Care Tips", historyTitle: "Scan History", noHistory: "No history found.",
+      cat1: "Cultivation Stages", cat2: "Fertilizer Management", cat3: "Water Management",
+      harvestVid: "Watch YouTube: Harvesting Guide", fertVid: "Watch YouTube: Fertilizer Guide", waterVid: "Watch YouTube: Water Management Guide",
+      d1Name: "Anthracnose", d1Desc: "• Caused by: Colletotrichum truncatum\n• Thrives in: High temps, wet weather\n• Infects at: Seedling phase or full maturity\n• Looks like: Long, tan to reddish-brown oval lesions; travels upward.\n• Results in: Damage to leaf tissue, reduced stalk strength and yield potential.\n💡 Pro tip: Use Trivapro fungicide for up to 42 days of control.",
+      d2Name: "Diplodia Ear Rot", d2Desc: "• Caused by: Stenocarpella maydis\n• Thrives in: Moderate temps, wet conditions (severe in no-till)\n• Infects: At and up to 3 weeks post-R1/silk\n• Looks like: White mold turning gray-brown.\n• Results in: Reduced grain quality and yield.\n💡 Pro tip: Apply Miravis Neo fungicide at R1.",
+      d3Name: "Fusarium Ear Rot", d3Desc: "• Caused by: Fusarium verticilliodes\n• Thrives in: Warm, wet weather before harvest\n• Infects: Silking, often after insect/hail damage (R5-R6)\n• Looks like: White to lavender kernels with brown streaks throughout ear.\n• Results in: Increased mycotoxins and reduced yield.\n💡 Pro tip: Use an R1 application of Miravis Neo fungicide.",
+      d4Name: "Gibberella Ear Rot", d4Desc: "• Caused by: Gibberella zeae\n• Thrives in: Cooler conditions during silking.\n• Infects: At Silk stage\n• Looks like: White to pink mold at ear tip; moves towards base.\n• Results in: Increased vomitoxin (DON) and reduced grain quality.\n💡 Pro tip: Apply Miravis Neo at green silk to R1 stage.",
+      d6Name: "Tar Spot", d6Desc: "• Caused by: Phyllachora maydis\n• Thrives in: Cool, humid conditions, prolonged leaf wetness.\n• Looks like: Small, raised, circular black spots that don’t rub off.\n• Results in: Damage to leaf tissue, stalks, husks, and lodging.\n💡 Pro tip: Apply Miravis Neo or Trivapro at VT/R1.",
+      p1Name: "Fall Armyworm", p1Desc: "Damage: Larvae eat corn leaves, silks, and kernels. They weaken plants and reduce yields.\nWhen: June to August.\nInsecticides: Lambda-Cyhalothrin, Chlorantraniliprole, Cypermethrin.",
+      p2Name: "European Corn Borer", p2Desc: "Damage: Tunnel into stalks and ears, causing structural damage.\nWhen: June to July.\nInsecticides: Bt, Carbaryl, Permethrin.",
+      p3Name: "Corn Leafhopper", p3Desc: "Damage: Spreads diseases like corn stunt and feeds on sap.\nWhen: Early spring and early summer.\nInsecticides: Imidacloprid, Thiamethoxam, Malathion.",
+      p4Name: "Corn Leaf Miner", p4Desc: "Damage: Larvae create tunnels in leaves, reducing photosynthesis.\nWhen: March to May.\nInsecticides: Lambda-Cyhalothrin, Pyrethroids.",
+      p5Name: "Cucumber Beetles", p5Desc: "Damage: Feed on leaves and roots; spread bacterial wilt.\nWhen: Early spring to mid-summer.\nInsecticides: Imidacloprid, Carbaryl, Permethrin.",
+      prepTitle: "Soil Preparation", prep1: "Plowing: Plow 20-30 cm deep.", prep2: "Fertilizer: Apply compost before planting.",
+      earlyTitle: "Planting & Early Stage", early1: "Seed Depth: Plant 1-2 inches deep.", early2: "Gap Filling: Within 10 days.",
+      growthTitle: "Growth & Flowering", growth1: "Fertilizer: Apply Urea at 4th and 8th weeks.", growth2: "Watering: Critical during silking.",
+      weedTitle: "Weed & Protection", weed1: "Weeding: Perform at 3 and 6 weeks.", weed2: "Mulching: Use straw.",
+      harvestTitle: "Maturation & Harvesting", harvest1: "Indicator: Kernels are hard.", harvest2: "Storage: Dry grains properly.",
+      fertTitle: "Fertilizer Management", fert1: "Basal: Apply Urea, TSP, and MOP before planting.", fert2: "Top Dressing: Apply Urea at 4th and 8th weeks.",
+      waterTitle: "Water Management", water1: "Flowering: Critical during silking and grain filling.", water2: "Drainage: Avoid waterlogging in the field.",
+      emptyTitle: "Empty History", deleteTitle: "Delete Record", deleteMsg: "Are you sure?", cancel: "Cancel", delete: "Delete"
     },
     si: {
-      title: "ගවේෂණය 🌽",
-      tabs: ["මගපෙන්වීම", "උපදෙස්", "ඉතිහාසය"],
-      guideTitle: "වගා අත්පොත 📖",
-      tipsTitle: "වගා උපදෙස් 💡",
-      historyTitle: "පරීක්ෂණ ඉතිහාසය 📜",
-      noHistory: "පරීක්ෂණ දත්ත හමු නොවීය.",
-      blightName: "කොළ පාළුව (Blight)",
-      blightDesc: "පැය 6කට වඩා පත්‍ර තෙත්ව පැවතීම නිසා වර්ධනය වේ. ආසාදනය වී දින 7-12 අතර ලප ඇතිවේ.",
-      rustName: "මලකඩ රෝගය (Common Rust)",
-      rustDesc: "පත්‍ර දෙපසම කුඩා ඕවලාකාර තද රතු-දුඹුරු බිබිලි ඇතිවේ.",
-      anthracnoseName: "ඇන්ත්‍රැක්නෝස් (Anthracnose)",
-      anthracnoseDesc: "මුල් කාලයේ පත්‍ර පාළුවක් ලෙසත්, පසුව කඳ කුණුවීමටත් හේතු වේ.",
-      eyespotName: "අයිස්පොට් (Eyespot)",
-      eyespotDesc: "කහ වටයක් සහිත ලා කොළ පාට ලප ඇතිවේ.",
-      tarspotName: "ටාර් ස්පොට් (Tar Spot)",
-      tarspotDesc: "පත්‍ර මත මැකීමට නොහැකි කුඩා කළු පැහැති තද ලප ඇතිවේ.",
-      rootwormName: "මුල් පණුවා (Corn Rootworm)",
-      rootwormDesc: "• හඳුනාගැනීම: ජූනි/ජූලි කාලයේ මුල් ආහාරයට ගනී. මේ නිසා ජලය සහ පෝෂක උරා ගැනීම අඩාල වේ.\n• පියවර: මුල් හාරා පරික්ෂා කිරීම සහ කහ පැහැති ඇලෙන සුළු උගුල් භාවිතය.",
-      cutwormName: "කළු කපන පණුවා (Black Cutworm)",
-      cutwormDesc: "• හඳුනාගැනීම: ළපටි පැළ පාමුලින් කපා 'Dead Heart' තත්ත්වය ඇති කරයි.\n• පියවර: වගාවේ මුල් අවධියේදී නිරන්තරයෙන් නිරීක්ෂණය කරන්න.",
-      armywormName: "සේනා දළඹුවා (Fall Armyworm)",
-      armywormDesc: "• හඳුනාගැනීම: පත්‍ර සහ කරල් විනාශ කරයි. පත්‍රවල සිදුරු ඇති කරයි.\n• ලක්ෂණ: හිස මත 'Y' සලකුණක් ඇත.",
-      earwormName: "කරල් විදින පණුවා (Corn Earworm)",
-      earwormDesc: "• හඳුනාගැනීම: කරල්වල අග කොටසට හානි කරයි. කරල අග අසූචි දක්නට ලැබේ.",
-      beanCutwormName: "බීන් කට්වර්ම් (Bean Cutworm)",
-      beanCutwormDesc: "• හඳුනාගැනීම: මල් මංජරිය සහ කරල්වල බීජ ආහාරයට ගනී.\n• ලක්ෂණ: හිසට ඉහළින් කළු පැහැති කොටු දෙකක් ඇත.",
-      earlyTitle: "1. සිටුවීම සහ මුල් අවධිය (සති 0-4)",
-      early1: "බීජ ගැඹුර: අඟල් 1-2 ක් ගැඹුරින් තෙතමනය සහිත පසෙහි සිටුවන්න.",
-      early2: "අඩුව පිරවීම: පැළ නොවූ තැන් ඇත්නම් දින 10 ක් තුළ නැවත සිටුවන්න.",
-      growthTitle: "2. වර්ධනය සහ මල් පිපීම (සති 5-10)",
-      growth1: "පොහොර: වගාවට සති 4 දී සහ 8 දී යූරියා පොහොර යොදන්න.",
-      growth2: "ජල සම්පාදනය: කරල් මතුවන කාලයේ තෙතමනය අත්‍යවශ්‍ය වේ.",
-      harvestTitle: "3. මේරීම සහ අස්වනු නෙළීම (සති 12+)",
-      harvest1: "හඳුනාගැනීම: බීජ තද වී පත්‍ර වියළී ගිය පසු අස්වනු නෙළන්න.",
-      harvest2: "ගබඩා කිරීම: බීජ හොඳින් වියළා ගබඩා කරන්න.",
-      deleteTitle: "මකන්න", deleteMsg: "මකන්නද?", cancel: "අවලංගු කරන්න", delete: "මකන්න"
+      title: "ගවේෂණය", tabs: ["මගපෙන්වීම", "උපදෙස්", "ඉතිහාසය"], guideTitle: "වගා අත්පොත", tipsTitle: "වගා උපදෙස්", historyTitle: "පරීක්ෂණ ඉතිහාසය", noHistory: "දත්ත පරීක්ෂා කර නොමැත.",
+      cat1: "වගා අවධීන්", cat2: "පොහොර කළමනාකරණය", cat3: "ජල කළමනාකරණය",
+      harvestVid: "YouTube වෙතින්: අස්වනු නෙළීමේ මඟපෙන්වීම", fertVid: "YouTube වෙතින්: පොහොර යෙදීමේ මඟපෙන්වීම", waterVid: "YouTube වෙතින්: ජල කළමනාකරණ මඟපෙන්වීම",
+      d1Name: "ඇන්ත්‍රැක්නෝස්", d1Desc: "• රෝග කාරකය: Colletotrichum truncatum\n• හිතකර කාලගුණය: අධික උෂ්ණත්වය සහ තෙත් සහිත බව.\n• හානිය: පත්‍ර මත තැඹිලි-දුඹුරු පැහැති ඕවලාකාර ලප ඇති කරයි; කඳේ ශක්තිය සහ අස්වැන්න අඩු කරයි.\n💡 විසඳුම: දින 42ක් දක්වා ආරක්ෂාව සඳහා Trivapro දිලීර නාශකය භාවිතා කරන්න.",
+      d2Name: "ඩිප්ලෝඩියා කරල් කුණුවීම", d2Desc: "• රෝග කාරකය: Stenocarpella maydis\n• හිතකර කාලගුණය: මධ්‍යස්ථ උෂ්ණත්වය සහ තතමනය.\n• ලක්ෂණ: කරල් පාමුල සුදු පැහැති පුස් හටගෙන පසුව අළු-දුඹුරු පැහැයට හැරේ.\n💡 විසඳුම: R1 අවධියේදී Miravis Neo දිලීර නාශකය යොදන්න.",
+      d3Name: "ෆියුසාරියම් කරල් කුණුවීම", d3Desc: "• රෝග කාරකය: Fusarium verticilliodes\n• හිතකර කාලගුණය: අස්වැන්නට පෙර පවතින උණුසුම් හා තෙත් කාලගුණය.\n• ලක්ෂණ: කරල් පුරා විසිරුණු සුදු හෝ රෝස පැහැති පුස් සහ දුඹුරු ඉරි.\n💡 විසඳුම: Miravis Neo දිලීර නාශකය R1 අවධියේදී භාවිතා කරන්න.",
+      d4Name: "ගිබරෙල්ලා කරල් කුණුවීම", d4Desc: "• රෝග කාරකය: Gibberella zeae\n• හිතකර කාලගුණය: සේද (Silk) අවධියේ පවතින සිසිල් කාලගුණය.\n• ලක්ෂණ: කරල් අග සිට පාමුලට විහිදෙන සුදු හෝ රෝස පැහැති පුස්.\n💡 විසඳුම: සේද අවධියේ සිට R1 දක්වා Miravis Neo යොදන්න.",
+      d6Name: "ටාර් ස්පොට් (Tar Spot)", d6Desc: "• රෝග කාරකය: Phyllachora maydis\n• හිතකර කාලගුණය: සිසිල් සහ තෙතමනය සහිත කාලගුණය.\n• ලක්ෂණ: පත්‍ර මත මකා දැමිය නොහැකි කුඩා කළු පැහැති තිත්.\n💡 විසඳුම: VT/R1 අවධියේදී Miravis Neo හෝ Trivapro භාවිතා කරන්න.",
+      p1Name: "සේනා දළඹුවා", p1Desc: "හානිය: පත්‍ර, සේද සහ කරල් ආහාරයට ගෙන ශාකය දුර්වල කරයි.\nකාලය: ජුනි - අගෝස්තු.\nකෘමිනාශක: Lambda-Cyhalothrin, Chlorantraniliprole, Cypermethrin.",
+      p2Name: "යුරෝපීය බෝරර්", p2Desc: "හානිය: කඳ සහ කරල් විදගෙන හානි කරන අතර ශාකය දුර්වල කරයි.\nකාලය: ජුනි - ජූලි.\nකෘමිනාශක: Bt, Carbaryl, Permethrin.",
+      p3Name: "කොළ පලඟැටියා", p3Desc: "හානිය: යුෂ උරා බීමෙන් ශාකය දුර්වල කරන අතර රෝග පතුරුවයි.\nකාලය: වසන්තය සහ මුල් ගිම්හානය.\nකෘමිනාශක: Imidacloprid, Thiamethoxam, Malathion.",
+      p4Name: "කොළ පතල් පණුවා", p4Desc: "හානිය: පත්‍ර තුළ උමං සාදා ප්‍රභාසංශ්ලේෂණය අඩාල කරයි.\nකාලය: මාර්තු - මැයි.\nකෘමිනාශක: Lambda-Cyhalothrin, Pyrethroids.",
+      p5Name: "පිපිඤ්ඤා කුරුමිණියා", p5Desc: "හානිය: පත්‍ර, කඳ සහ මුල් ආහාරයට ගෙන රෝග පතුරුවයි.\nකාලය: වසන්තයේ සිට මැද ගිම්හානය දක්වා.\nකෘමිනාශක: Imidacloprid, Carbaryl, Permethrin.",
+      prepTitle: "පස සකස් කිරීම", prep1: "පස පෙරළීම: සෙ.මී. 20-30 ගැඹුරට.", prep2: "පොහොර: සිටුවීමට පෙර කොම්පෝස්ට්.",
+      earlyTitle: "සිටුවීම & මුල් අවධිය", early1: "ගැඹුර: අඟල් 1-2 ගැඹුරට.", early2: "අඩුව පිරවීම: දින 10ක් තුළ.",
+      growthTitle: "වර්ධනය & මල් පිපීම", growth1: "යූරියා: 4 සහ 8 සති වලදී.", growth2: "ජලය: කරල් මතු වන විට අත්‍යවශ්‍යයි.",
+      weedTitle: "වල් නෙළීම & ආරක්ෂාව", weed1: "වල් නෙළීම: 3 සහ 6 සති වලදී.", weed2: "වැස්ම: පස තෙතමනයට පිදුරු යොදන්න.",
+      harvestTitle: "මේරීම & අස්වනු නෙළීම", harvest1: "හඳුනාගැනීම: බීජ තද වූ පසු.", harvest2: "ගබඩා: හොඳින් වියළා ගබඩා කරන්න.",
+      fertTitle: "පොහොර කළමනාකරණය", fert1: "මූලික පොහොර: සිටුවීමට පෙර යූරියා, TSP සහ MOP යොදන්න.", fert2: "අතිරේක පොහොර: 4 සහ 8 වන සති වලදී යූරියා යොදන්න.",
+      waterTitle: "ජල කළමනාකරණය", water1: "මල් පිපීම: සේද අවධිය සහ කරල් පිරෙන කාලය ඉතා තීරණාත්මකයි.", water2: "ජලාපවහනය: වගා බිමේ වතුර රැඳීම වළක්වා ගන්න.",
+      emptyTitle: "හිස්ව පවතී", deleteTitle: "මකන්න", deleteMsg: "ඔබට මෙය මැකීමට අවශ්‍යද?", cancel: "අවලංගු කරන්න", delete: "මකන්න"
     },
     ta: {
-        title: "ஆராய்ந்து பாருங்கள் 🌽",
-        tabs: ["வழிகாட்டி", "குறிப்புகள்", "வரலாறு"],
-        guideTitle: "விவசாய கையேடு 📖",
-        tipsTitle: "பராமரிப்பு குறிப்புகள் 💡",
-        historyTitle: "பரிசோதனை வரலாறு 📜",
-        noHistory: "வரலாறு எதுவும் இல்லை.",
-        rootwormName: "வேர் புழு",
-        rootwormDesc: "• அடையாளம்: ஜூன்/ஜூலை மாதங்களில் வேர்களை உண்ணும். செடிகள் சாய்வதற்கு இது காரணமாகிறது.",
-        cutwormName: "கருப்பு வெட்டுப்புழு",
-        cutwormDesc: "• அடையாளம்: இளம் செடிகளை வெட்டி 'Dead Heart' நிலையை உண்டாக்கும்.",
-        armywormName: "சேனா படைப்புழு",
-        armywormDesc: "• அடையாளம்: இலைகளில் துளைகளையும் கிழிந்த ஓரங்களையும் உண்டாக்கும்.",
-        earwormName: "கதிர் புழு",
-        earwormDesc: "• அடையாளம்: கதிரின் நுனியில் இருந்து உண்ணத் தொடங்குகிறது.",
-        beanCutwormName: "பீன் வெட்டுப்புழு",
-        beanCutwormDesc: "• அடையாளம்: கதிர் மற்றும் தானியங்களை உண்ணும்.",
-        earlyTitle: "1. நடுதல் மற்றும் ஆரம்ப நிலை (0-4 வாரங்கள்)",
-        early1: "ஆழம்: விதைகளை 1-2 அங்குல ஆழத்தில் நடவும்.",
-        early2: "மறுநடவு: 7-10 நாட்களுக்குள் காலியாக உள்ள இடங்களில் நடவும்.",
-        growthTitle: "2. வளர்ச்சி நிலை (5-10 வாரங்கள்)",
-        growth1: "உரம்: 4 மற்றும் 8 வது வாரங்களில் யூரியா இடவும்.",
-        growth2: "நீர்: பூக்கும் மற்றும் கதிர் வரும் காலத்தில் நீர் அவசியம்.",
-        harvestTitle: "3. அறுவடை (12+ வாரங்கள்)",
-        harvest1: "அறுவடை: தானியங்கள் கடினமானதும் அறுவடை செய்யவும்.",
-        harvest2: "சேமிப்பு: நன்கு உலர்த்தி சேமிக்கவும்.",
-        deleteTitle: "நீக்கு", deleteMsg: "நீக்க வேண்டுமா?", cancel: "ரத்து", delete: "நீக்கு"
+      title: "ஆராய்ந்து பாருங்கள்", tabs: ["வழிகாட்டி", "குறிப்புகள்", "வரலாறு"], guideTitle: "விவசாயக் கையேடு", tipsTitle: "பராமரிப்பு", historyTitle: "வரலாறு", noHistory: "தகவல்கள் இல்லை.",
+      cat1: "சாகுபடி நிலைகள்", cat2: "உர மேலாண்மை", cat3: "நீர் மேலாண்மை",
+      harvestVid: "YouTube: அறுவடை கையேடு", fertVid: "YouTube: உர மேலாண்மை", waterVid: "YouTube: நீர் மேலாண்மை",
+      d1Name: "ஆந்த்ராக்னோஸ்", d1Desc: "• காரணம்: Colletotrichum truncatum\n• அறிகுறிகள்: இலைகளில் நீண்ட பழுப்பு நிற தழும்புகள்; தண்டு வலிமையை குறைக்கும்.\n💡 குறிப்பு: 42 நாட்கள் பாதுகாப்பிற்கு Trivapro பூஞ்சைக் கொல்லியைப் பயன்படுத்தவும்.",
+      d2Name: "டிப்ளோடியா அழுகல்", d2Desc: "• காரணம்: Stenocarpella maydis\n• அறிகுறிகள்: கதிரின் அடியில் வெள்ளை பூஞ்சை, பின்னர் சாம்பல்-பழுப்பு நிறமாக மாறும்.\n💡 குறிப்பு: R1 நிலையில் Miravis Neo பயன்படுத்தவும்.",
+      d3Name: "புசாரியம் அழுகல்", d3Desc: "• காரணம்: Fusarium verticilliodes\n• அறிகுறிகள்: வெள்ளை அல்லது ஊதா நிற தானியங்கள் மற்றும் பழுப்பு நிற கோடுகள்.\n💡 குறிப்பு: Miravis Neo பூஞ்சைக் கொல்லியை R1 நிலையில் பயன்படுத்தவும்.",
+      d4Name: "கிபெரெல்லா அழுகல்", d4Desc: "• காரணம்: Gibberella zeae\n• அறிகுறிகள்: கதிரின் நுனியில் இருந்து சிவந்த அல்லது இளஞ்சிவப்பு பூஞ்சை.\n💡 குறிப்பு: பச்சை சில்க் நிலையில் Miravis Neo பயன்படுத்தவும்.",
+      d6Name: "தார் புள்ளி நோய்", d6Desc: "• காரணம்: Phyllachora maydis\n• அறிகுறிகள்: இலைகளில் தேய்த்தாலும் நீங்காத சிறிய கருப்பு புள்ளிகள்.\n💡 குறிப்பு: VT/R1 நிலையில் Miravis Neo அல்லது Trivapro பயன்படுத்தவும்.",
+      p1Name: "சேனா படைப்புழு", p1Desc: "பாதிப்பு: இலைகள் மற்றும் கதிர்களை உண்ணும்; மகசூலை குறைக்கும்.\nபூச்சிக்கொல்லிகள்: Lambda-Cyhalothrin, Chlorantraniliprole.",
+      p2Name: "சோளத் துளைப்பான்", p2Desc: "பாதிப்பு: தண்டு மற்றும் கதிர்களை துளைத்து பலவீனப்படுத்தும்.\nபூச்சிக்கொல்லிகள்: Bt, Carbaryl, Permethrin.",
+      p3Name: "இலைத் தத்துப்பூச்சி", p3Desc: "பாதிப்பு: சாற்றை உறிஞ்சி நோய்களை பரப்பும்.\nபூச்சிக்கொல்லிகள்: Imidacloprid, Thiamethoxam.",
+      p4Name: "இலைச் சுரங்கப்புழு", p4Desc: "பாதிப்பு: இலைகளுக்குள் சுரங்கம் அமைத்து ஒளிச்சேர்க்கையை குறைக்கும்.\nபூச்சிக்கொல்லிகள்: Lambda-Cyhalothrin.",
+      p5Name: "வெள்ளரி வண்டு", p5Desc: "பாதிப்பு: வேர், தண்டு மற்றும் இலைகளை உண்ணும்.\nபூச்சிக்கொல்லிகள்: Imidacloprid, Carbaryl.",
+      prepTitle: "நிலம் தயாரிப்பு", prep1: "உழுதல்: 20-30 செ.மீ ஆழம்.", prep2: "உரம்: இயற்கை உரம் இடுங்கள்.",
+      earlyTitle: "நடுதல்", early1: "ஆழம்: 1-2 அங்குல ஆழம்.", early2: "இடைவெளி: 10 நாளில் நிரப்பவும்.",
+      growthTitle: "வளர்ச்சி", growth1: "உரம்: 4, 8 வது வாரங்களில்.", growth2: "நீர்: பூக்கும் போது அவசியம்.",
+      weedTitle: "பாதுகாப்பு", weed1: "களை: 3, 6 வது வாரங்களில்.", weed2: "மூடாக்கு: வைக்கோல் இடவும்.",
+      harvestTitle: "அறுவடை", harvest1: "அறுவடை: தானியம் கடினமானதும்.", harvest2: "சேமிப்பு: உலர்த்தி சேமிக்கவும்.",
+      fertTitle: "உர மேலாண்மை", fert1: "அடிப்படை: நடவு செய்வதற்கு முன் யூரியா, TSP மற்றும் MOP இடவும்.", fert2: "மேல் உரம்: 4 மற்றும் 8 வது வாரங்களில் யூரியா இடவும்.",
+      waterTitle: "நீர் மேலாண்மை", water1: "பூக்கும் நிலை: பூக்கும் மற்றும் தானியம் நிரப்பும் போது நீர் அவசியம்.", water2: "வடிகால்: வயலில் நீர் தேங்குவதை தவிர்க்கவும்.",
+      emptyTitle: "காலியாக உள்ளது", deleteTitle: "நீக்கு", deleteMsg: "நீக்க வேண்டுமா?", cancel: "ரத்து", delete: "நீக்கு"
     }
   };
 
   const ExpandableCard = ({ id, name, desc }: { id: string, name: string, desc: string }) => (
-    <TouchableOpacity activeOpacity={0.8} onPress={() => toggleExpand(id)} style={styles.guideCard}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={styles.guideName}>{name}</Text>
-        <Ionicons name={expandedId === id ? "chevron-up" : "chevron-down"} size={18} color="#666" />
+    <TouchableOpacity activeOpacity={0.9} onPress={() => toggleExpand(id)} style={[styles.guideCard, expandedId === id && styles.expandedCard]}>
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderLeft}>
+          <View style={[styles.indicator, { backgroundColor: id.startsWith('p') ? '#ef5350' : '#66bb6a' }]} />
+          <Text style={styles.guideName}>{name}</Text>
+        </View>
+        <Ionicons name={expandedId === id ? "chevron-up-circle" : "chevron-down-circle"} size={24} color="#1b5e20" />
       </View>
-      {expandedId === id && desc ? (
+      {expandedId === id && (
         <View style={styles.descContainer}>
+          {itemImages[id] && <Image source={itemImages[id]} style={styles.diseaseImg} resizeMode="cover" />}
           <Text style={styles.guideDesc}>{desc}</Text>
         </View>
-      ) : null}
+      )}
     </TouchableOpacity>
   );
 
   return (
-    <LinearGradient colors={['#1b5e20', '#f0f4f7']} style={{ flex: 1 }}>
+    <LinearGradient colors={['#1b5e20', '#2e7d32', '#f0f4f7']} style={{ flex: 1 }}>
       <View style={styles.container}>
         <Text style={styles.mainTitle}>{t[lang].title}</Text>
-        <View style={styles.tabRow}>
-          {t[lang].tabs.map((tab: string, index: number) => {
-            const tabKeys = ['Guide', 'Tips', 'History'];
-            return (
-              <TouchableOpacity key={tab} style={[styles.tabButton, activeTab === tabKeys[index] && styles.activeTabButton]} onPress={() => { setActiveTab(tabKeys[index]); setExpandedId(null); }}>
-                <Text style={[styles.tabText, activeTab === tabKeys[index] && styles.activeTabText]}>{tab}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.modernTabBar}>
+          {[{ id: 'Guide', icon: 'book', color: '#4caf50' }, { id: 'Tips', icon: 'bulb', color: '#ffb300' }, { id: 'History', icon: 'time', color: '#2196f3' }].map((tab, idx) => (
+            <TouchableOpacity key={tab.id} style={[styles.modernTabItem, activeTab === tab.id && { backgroundColor: tab.color }]} onPress={() => { setActiveTab(tab.id); setExpandedId(null); }}>
+              <Ionicons name={tab.icon as any} size={18} color={activeTab === tab.id ? "#fff" : "#1b5e20"} />
+              <Text style={[styles.modernTabText, activeTab === tab.id && { color: '#fff' }]}>{t[lang].tabs[idx]}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
           {activeTab === 'Guide' && (
-            <View style={{ paddingBottom: 20 }}>
+            <View>
               <Text style={styles.tabTitle}>{t[lang].guideTitle}</Text>
-              <View style={styles.sectionHeader}><Ionicons name="leaf" size={18} color="#1b5e20" /><Text style={styles.sectionHeaderText}> Diseases</Text></View>
-              <ExpandableCard id="d1" name={t[lang].blightName} desc={t[lang].blightDesc} />
-              <ExpandableCard id="d2" name={t[lang].rustName} desc={t[lang].rustDesc} />
-              <ExpandableCard id="d3" name={t[lang].anthracnoseName} desc={t[lang].anthracnoseDesc} />
-              <ExpandableCard id="d4" name={t[lang].eyespotName} desc={t[lang].eyespotDesc} />
-              <ExpandableCard id="d5" name={t[lang].tarspotName} desc={t[lang].tarspotDesc} />
-
-              <View style={styles.sectionHeader}><Ionicons name="bug" size={18} color="#c62828" /><Text style={[styles.sectionHeaderText, {color: '#c62828'}]}> Pests</Text></View>
-              <ExpandableCard id="p1" name={t[lang].rootwormName} desc={t[lang].rootwormDesc} />
-              <ExpandableCard id="p2" name={t[lang].cutwormName} desc={t[lang].cutwormDesc} />
-              <ExpandableCard id="p3" name={t[lang].armywormName} desc={t[lang].armywormDesc} />
-              <ExpandableCard id="p4" name={t[lang].earwormName} desc={t[lang].earwormDesc} />
-              <ExpandableCard id="p5" name={t[lang].beanCutwormName} desc={t[lang].beanCutwormDesc} />
+              <View style={styles.sectionDivider}><Text style={styles.sectionHeaderText}>{lang === 'ta' ? 'நோய்கள்' : 'Diseases'}</Text></View>
+              {['d1', 'd2', 'd3', 'd4', 'd6'].map(id => <ExpandableCard key={id} id={id} name={t[lang][id + 'Name']} desc={t[lang][id + 'Desc']} />)}
+              <View style={[styles.sectionDivider, { marginTop: 20 }]}><Text style={[styles.sectionHeaderText, { color: '#c62828' }]}>{lang === 'ta' ? 'பூச்சிகள்' : 'Pests'}</Text></View>
+              {['p1', 'p2', 'p3', 'p4', 'p5'].map(id => <ExpandableCard key={id} id={id} name={t[lang][id + 'Name']} desc={t[lang][id + 'Desc']} />)}
             </View>
           )}
-
           {activeTab === 'Tips' && (
-            <View style={{ paddingBottom: 20 }}>
+            <View>
               <Text style={styles.tabTitle}>{t[lang].tipsTitle}</Text>
-              <Text style={styles.subHeader}>{t[lang].earlyTitle}</Text>
-              <View style={styles.tipItem}><Ionicons name="sunny" size={20} color="#1b5e20" /><Text style={styles.tipText}>{t[lang].early1}</Text></View>
-              <View style={styles.tipItem}><Ionicons name="refresh-circle" size={20} color="#1b5e20" /><Text style={styles.tipText}>{t[lang].early2}</Text></View>
               
-              <Text style={styles.subHeader}>{t[lang].growthTitle}</Text>
-              <View style={styles.tipItem}><Ionicons name="leaf" size={20} color="#1b5e20" /><Text style={styles.tipText}>{t[lang].growth1}</Text></View>
-              <View style={styles.tipItem}><Ionicons name="water" size={20} color="#1b5e20" /><Text style={styles.tipText}>{t[lang].growth2}</Text></View>
-              
-              <Text style={styles.subHeader}>{t[lang].harvestTitle}</Text>
-              <View style={styles.tipItem}><Ionicons name="checkmark-done-circle" size={20} color="#1b5e20" /><Text style={styles.tipText}>{t[lang].harvest1}</Text></View>
-              <View style={styles.tipItem}><Ionicons name="archive" size={20} color="#1b5e20" /><Text style={styles.tipText}>{t[lang].harvest2}</Text></View>
+              <View style={styles.categoryHeader}><Text style={styles.categoryHeaderText}>{t[lang].cat1}</Text></View>
+              {[ 
+                { t: t[lang].prepTitle, s: [t[lang].prep1, t[lang].prep2] }, 
+                { t: t[lang].earlyTitle, s: [t[lang].early1, t[lang].early2] }, 
+                { t: t[lang].growthTitle, s: [t[lang].growth1, t[lang].growth2] }, 
+                { t: t[lang].weedTitle, s: [t[lang].weed1, t[lang].weed2] }, 
+                { t: t[lang].harvestTitle, s: [t[lang].harvest1, t[lang].harvest2] }
+              ].map((sec, i) => (
+                <View key={i} style={styles.tipSectionContainer}>
+                  <Text style={styles.tipSectionTitle}>{sec.t}</Text>
+                  {sec.s.map((tip, j) => <View key={j} style={styles.tipItem}><View style={styles.bullet} /><Text style={styles.tipText}>{tip}</Text></View>)}
+                  {i === 4 && (
+                    <TouchableOpacity onPress={() => openVideo('https://youtu.be/3kFUMKVzG9I?si=KkIYSFc9D_v2aU1q')}>
+                      <Text style={styles.hyperlinkText}>🔗 {t[lang].harvestVid}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+
+              <View style={styles.categoryHeader}><Text style={styles.categoryHeaderText}>{t[lang].cat2}</Text></View>
+              <View style={styles.tipSectionContainer}>
+                <Text style={styles.tipSectionTitle}>{t[lang].fertTitle}</Text>
+                <View style={styles.tipItem}><View style={styles.bullet} /><Text style={styles.tipText}>{t[lang].fert1}</Text></View>
+                <View style={styles.tipItem}><View style={styles.bullet} /><Text style={styles.tipText}>{t[lang].fert2}</Text></View>
+                <TouchableOpacity onPress={() => openVideo('https://youtu.be/p6hln7DBqnY?si=I1c7oKL2845t5xDc')}>
+                  <Text style={styles.hyperlinkText}>🔗 {t[lang].fertVid}</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.categoryHeader}><Text style={styles.categoryHeaderText}>{t[lang].cat3}</Text></View>
+              <View style={styles.tipSectionContainer}>
+                <Text style={styles.tipSectionTitle}>{t[lang].waterTitle}</Text>
+                <View style={styles.tipItem}><View style={styles.bullet} /><Text style={styles.tipText}>{t[lang].water1}</Text></View>
+                <View style={styles.tipItem}><View style={styles.bullet} /><Text style={styles.tipText}>{t[lang].water2}</Text></View>
+                <TouchableOpacity onPress={() => openVideo('https://youtu.be/cwrzI2yrSTc?si=xIEQ7HYyNM7P-9f3')}>
+                  <Text style={styles.hyperlinkText}>🔗 {t[lang].waterVid}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
-
           {activeTab === 'History' && (
-            <View style={{ paddingBottom: 20 }}>
+            <View>
               <Text style={styles.tabTitle}>{t[lang].historyTitle}</Text>
-              <FlatList
-                data={history}
-                scrollEnabled={false}
-                keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
-                renderItem={({ item }) => (
-                  <View style={styles.historyCard}>
-                    <View>
-                      <Text style={[styles.historyDisease, { color: item.disease === 'Healthy' ? '#2e7d32' : '#c62828' }]}>{item.disease}</Text>
-                      <Text style={styles.historyDate}>{item.date}</Text>
-                    </View>
-                    <View style={styles.historyRight}>
-                      <View style={[styles.accuracyBadge, { backgroundColor: item.disease === 'Healthy' ? '#e8f5e9' : '#ffebee' }]}>
-                        <Text style={[styles.accuracyText, { color: item.disease === 'Healthy' ? '#2e7d32' : '#c62828' }]}>{item.accuracy}</Text>
-                      </View>
-                      <TouchableOpacity onPress={() => deleteHistoryItem(item.id)}><Ionicons name="trash-outline" size={20} color="#c62828" style={{ marginTop: 8 }} /></TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-                ListEmptyComponent={<Text style={styles.emptyText}>{t[lang].noHistory}</Text>}
-              />
+              {history.length === 0 ? (
+                <View style={styles.emptyStateContainer}>
+                  <View style={styles.emptyIconCircle}><Ionicons name="document-text-outline" size={60} color="#1b5e20" /></View>
+                  <Text style={styles.emptyTitleText}>{t[lang].emptyTitle}</Text>
+                  <Text style={styles.emptySubText}>{t[lang].noHistory}</Text>
+                </View>
+              ) : (
+                history.map((item) => (
+                <View key={item.id} style={styles.hCard}>
+                  <View style={styles.hTop}><Text style={[styles.hName, { color: item.disease === 'Healthy' ? '#2e7d32' : '#c62828' }]}>{item.disease}</Text><Text style={styles.hAcc}>{item.accuracy}</Text></View>
+                  <View style={styles.hBot}><Text style={styles.hDate}>{item.date}</Text><TouchableOpacity onPress={() => deleteHistoryItem(item.id)}><Ionicons name="trash" size={18} color="#ef5350" /></TouchableOpacity></View>
+                </View>
+              )))}
             </View>
           )}
         </ScrollView>
@@ -261,27 +244,38 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 60 },
-  mainTitle: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 20 },
-  tabRow: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 15, padding: 5, marginBottom: 20 },
-  tabButton: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 10 },
-  activeTabButton: { backgroundColor: '#fff' },
-  tabText: { color: '#eee', fontWeight: 'bold' },
-  activeTabText: { color: '#1b5e20' },
-  tabTitle: { fontSize: 20, fontWeight: 'bold', color: '#1b5e20', marginBottom: 15 },
-  subHeader: { fontSize: 16, fontWeight: 'bold', color: '#1b5e20', marginTop: 15, marginBottom: 8, backgroundColor: '#e8f5e9', padding: 10, borderRadius: 10 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginTop: 15, marginBottom: 8 },
-  sectionHeaderText: { fontWeight: 'bold', fontSize: 16, color: '#1b5e20' },
-  guideCard: { backgroundColor: '#fff', padding: 15, borderRadius: 15, marginBottom: 10, elevation: 3 },
-  guideName: { fontSize: 17, fontWeight: 'bold', color: '#333' },
-  descContainer: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
-  guideDesc: { fontSize: 14, color: '#444', lineHeight: 21 },
-  tipItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 15, borderRadius: 15, marginBottom: 10, elevation: 2 },
-  tipText: { marginLeft: 12, fontSize: 14, color: '#333', flex: 1 },
-  historyCard: { backgroundColor: '#fff', flexDirection: 'row', justifyContent: 'space-between', padding: 15, borderRadius: 20, marginBottom: 12, elevation: 3 },
-  historyDisease: { fontSize: 18, fontWeight: 'bold' },
-  historyDate: { color: '#999', fontSize: 12 },
-  historyRight: { alignItems: 'flex-end' },
-  accuracyBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  accuracyText: { fontWeight: 'bold', fontSize: 14 },
-  emptyText: { textAlign: 'center', marginTop: 30, color: '#999' }
+  mainTitle: { fontSize: 32, fontWeight: '900', color: '#fff', marginBottom: 25 },
+  modernTabBar: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: 6, marginBottom: 25 },
+  modernTabItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 15 },
+  modernTabText: { marginLeft: 6, fontWeight: 'bold', fontSize: 12, color: '#fff' },
+  tabTitle: { fontSize: 24, fontWeight: 'bold', color: '#1b5e20', marginBottom: 20 },
+  sectionDivider: { borderLeftWidth: 4, borderLeftColor: '#1b5e20', paddingLeft: 10, marginBottom: 15 },
+  sectionHeaderText: { fontSize: 18, fontWeight: '800', color: '#1b5e20' },
+  categoryHeader: { backgroundColor: '#1b5e20', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 10, marginBottom: 15, marginTop: 10 },
+  categoryHeaderText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  guideCard: { backgroundColor: '#fff', borderRadius: 22, marginBottom: 12, padding: 16 },
+  expandedCard: { borderColor: '#1b5e20', borderWidth: 1 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardHeaderLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  indicator: { width: 4, height: 24, borderRadius: 2, marginRight: 12 },
+  guideName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  descContainer: { marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
+  diseaseImg: { width: '100%', height: 200, borderRadius: 15, marginBottom: 10 },
+  guideDesc: { fontSize: 14, color: '#444', lineHeight: 22 },
+  tipSectionContainer: { backgroundColor: '#fff', borderRadius: 22, padding: 18, marginBottom: 15 },
+  tipSectionTitle: { fontSize: 17, fontWeight: 'bold', color: '#1b5e20', marginBottom: 10 },
+  tipItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 5 },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1b5e20', marginTop: 7, marginRight: 8 },
+  tipText: { fontSize: 14, color: '#444', flex: 1 },
+  hyperlinkText: { color: '#0066cc', textDecorationLine: 'underline', fontSize: 14, fontWeight: '600', marginTop: 10 },
+  hCard: { backgroundColor: '#fff', borderRadius: 20, padding: 18, marginBottom: 10 },
+  hTop: { flexDirection: 'row', justifyContent: 'space-between' },
+  hName: { fontSize: 17, fontWeight: 'bold' },
+  hAcc: { fontWeight: 'bold', color: '#666' },
+  hBot: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  hDate: { color: '#999', fontSize: 13 },
+  emptyStateContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 60, padding: 20 },
+  emptyIconCircle: { width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255, 255, 255, 0.4)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  emptyTitleText: { fontSize: 20, fontWeight: 'bold', color: '#1b5e20', marginBottom: 8 },
+  emptySubText: { fontSize: 14, color: '#666', textAlign: 'center' },
 });
