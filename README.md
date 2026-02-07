@@ -1,6 +1,6 @@
 # corn-disease-detection
 
-# AI CornCare 🌽📱
+# AI CornCare 🌽
 An AI-powered Mobile Application for Corn Leaf Disease Detection.
 
 AI CornCare is a specialized mobile solution designed to help farmers identify corn leaf diseases instantly using Artificial Intelligence. By simply taking a photo, the app analyzes the leaf, identifies the disease, provides management advice, and shows the nearest agricultural service centers.
