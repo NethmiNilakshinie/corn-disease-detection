@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#1b5e20",
-        "foregroundImage": "./assets/images/Apicorn.png"
+        "foregroundImage": "./assets/images/Appicon.png"
       },
       "package": "com.yourname.aicorncare",
       "edgeToEdgeEnabled": true,
@@ -34,7 +34,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/Appicon.png",
-          "imageWidth": 250,
+          "imageWidth": 512,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

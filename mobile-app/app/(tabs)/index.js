@@ -198,7 +198,7 @@ export default function HomeScreen() {
         </View>
 
         <TouchableOpacity style={styles.analyzeBtn} onPress={analyzeImage} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.analyzeText}>Analyze Now</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.analyzeText}>Analyze</Text>}
         </TouchableOpacity>
 
         <View style={styles.langSection}>

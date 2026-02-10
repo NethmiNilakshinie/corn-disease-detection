@@ -8,24 +8,24 @@ export default function App() {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // 1. පින්තූරයක් තෝරාගැනීමට හෝ ගැනීමට (Camera/Gallery)
+  // (Camera/Gallery)
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], // Square image එකක් ගන්න
+      aspect: [1, 1], // Square image 
       quality: 1,
     });
 
     if (!result.canceled) {
       setImage(result.assets[0].uri);
-      setPrediction(null); // කලින් තිබ්බ result මකන්න
+      setPrediction(null); 
     }
   };
 
-  // 2. API එකට පින්තූරය යවන්න
+  // Upload image to API
   const uploadImage = async () => {
-    if (!image) return alert("කරුණාකර පින්තූරයක් තෝරන්න!");
+    if (!image) return alert("pleace select a photo!");
 
     setLoading(true);
     const formData = new FormData();
@@ -36,7 +36,6 @@ export default function App() {
     });
 
     try {
-      // වැදගත්: මෙතන 'YOUR_IP_ADDRESS' වෙනුවට ඔයාගේ පරිගණකයේ IP එක දාන්න
       const response = await axios.post('http://172.20.10.7:8000/predict', formData, {
     headers: {
         'Content-Type': 'multipart/form-data',
@@ -45,7 +44,7 @@ export default function App() {
       setPrediction(response.data);
     } catch (error) {
       console.error(error);
-      alert("API එකට සම්බන්ධ විය නොහැක. IP එක පරීක්ෂා කරන්න!");
+      alert("Connection failed! Please check your server IP!");
     } finally {
       setLoading(false);
     }
@@ -54,26 +53,26 @@ export default function App() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>AI Corn Care</Text>
-      <Text style={styles.subtitle}>බඩඉරිඟු රෝග හඳුනාගැනීමේ පද්ධතිය</Text>
+      <Text style={styles.subtitle}>Corn Leaf Disease Diagnosis System</Text>
 
       <TouchableOpacity style={styles.button} onPress={pickImage}>
-        <Text style={styles.buttonText}>පින්තූරයක් තෝරන්න</Text>
+        <Text style={styles.buttonText}>Select Image</Text>
       </TouchableOpacity>
 
       {image && <Image source={{ uri: image }} style={styles.image} />}
 
       {image && !prediction && (
         <TouchableOpacity style={[styles.button, {backgroundColor: '#2e7d32'}]} onPress={uploadImage}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>පරීක්ෂා කරන්න</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Analyze Now</Text>}
         </TouchableOpacity>
       )}
 
       {prediction && (
         <View style={styles.resultContainer}>
-          <Text style={styles.resultTitle}>ප්‍රතිඵලය: {prediction.disease}</Text>
-          <Text style={styles.confidence}>විශ්වාසනීයත්වය: {prediction.confidence}</Text>
+          <Text style={styles.resultTitle}>Detected Disease: {prediction.disease}</Text>
+          <Text style={styles.confidence}>Confidence Level: {prediction.confidence}</Text>
           <View style={styles.solutionBox}>
-            <Text style={styles.solutionText}>විසඳුම: {prediction.solution}</Text>
+            <Text style={styles.solutionText}>Recommended Solution: {prediction.solution}</Text>
           </View>
         </View>
       )}

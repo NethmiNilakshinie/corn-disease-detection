@@ -6,10 +6,9 @@ import io
 
 app = FastAPI()
 
-# 1. Load the model you saved
+# Load model 
 MODEL = tf.keras.layers.TFSMLayer("../models/1", call_endpoint='serving_default')
 
-# 2. Your Class Names (Update these to match your dataset)
 CLASS_NAMES = ["Blight", "Common Rust", "Gray Leaf Spot", "Healthy"]
 
 # 3. Farming Solutions
@@ -25,30 +24,30 @@ async def predict(file: UploadFile = File(...)):
     data = await file.read()
     image = Image.open(io.BytesIO(data)).convert('RGB')
     
-    # 1. Resize කිරීම (ඔයාගේ model එක train කරපු size එකම දෙන්න - උදා: 256)
+    # 1. Resizing
     image = image.resize((256, 256))
     
-    # 2. Array එකක් බවට පත් කිරීම
+    # 2. convert to Array
     img_array = np.array(image).astype(np.float32)
 
-    # --- උත්සාහය A: 255න් බෙදා පරීක්ෂා කිරීම ---
     #img_array = img_array / 255.0 
     img_array = img_array
 
-    # --- උත්සාහය B: (A වැඩ නොකරයි නම් ඉහත පේළිය මකා මෙය පාවිච්චි කරන්න) ---
     # img_array = img_array 
 
     img_array = np.expand_dims(img_array, 0)
 
-    # 3. Prediction ලබාගැනීම
+    # 3. get Prediction 
     predictions_dict = MODEL(img_array, training=False)
     predictions = list(predictions_dict.values())[0]
     
-    # Terminal එකේ බලන්න values මාරු වෙනවාද කියලා
     raw_results = predictions.numpy()[0]
     print(f"Raw Prediction Values: {raw_results}")
-
+    
+    #  np.argmax() use to find the class with the highest probability.
     predicted_class = CLASS_NAMES[np.argmax(raw_results)]
+
+    # calculate confidence level
     confidence = float(np.max(raw_results))
 
     return {
