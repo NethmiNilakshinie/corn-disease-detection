@@ -37,7 +37,7 @@ async def predict(file: UploadFile = File(...)):
 
     img_array = np.expand_dims(img_array, 0)
 
-    # 3. get Prediction 
+    # get Prediction 
     predictions_dict = MODEL(img_array, training=False)
     predictions = list(predictions_dict.values())[0]
     
